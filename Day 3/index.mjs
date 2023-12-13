@@ -113,6 +113,59 @@ function part1(grid) {
 }
 
 function part2(grid) {
+    const gearPositions = findSymbols(grid).filter(([x, y]) => grid[y][x] === '*');
+    let total = 0;
+    for (const [x, y] of gearPositions) {
+        const partNumberPositions = { [y - 1]: [], [y]: [], [y + 1]: [] };
+        // row above
+        if (y > 0) {
+            if (grid[y - 1][x].match(/\d/)) {
+                addIfNumber(partNumberPositions, grid, x, y - 1);
+            }
+            if (x > 0) {
+                if (grid[y - 1][x - 1].match(/\d/)) {
+                    addIfNumber(partNumberPositions, grid, x - 1, y - 1);
+                }
+            }
+            if (x < grid[y - 1].length - 1 && grid[y - 1][x + 1].match(/\d/)) {
+                addIfNumber(partNumberPositions, grid, x + 1, y - 1);
+            }
+        }
+
+        // this row
+        if (grid[y][x - 1].match(/\d/)) {
+            addIfNumber(partNumberPositions, grid, x - 1, y);
+        }
+        if (x < grid[y].length - 1 && grid[y][x + 1].match(/\d/)) {
+            addIfNumber(partNumberPositions, grid, x + 1, y);
+        }
+        
+        // row below
+        if (y < grid.length - 1) {
+            if (grid[y + 1][x].match(/\d/)) {
+                addIfNumber(partNumberPositions, grid, x, y + 1);
+            }
+            if (x > 0) {
+                if (grid[y + 1][x - 1].match(/\d/)) {
+                    addIfNumber(partNumberPositions, grid, x - 1, y + 1);
+                }
+            }
+            if (x < grid[y + 1].length - 1 && grid[y + 1][x + 1].match(/\d/)) {
+                addIfNumber(partNumberPositions, grid, x + 1, y + 1);
+            }
+        }
+        const totalParts = partNumberPositions[y - 1].length + partNumberPositions[y].length + partNumberPositions[y + 1].length;
+        if (totalParts === 2) {
+            let gearRatio = 1;
+            for (const y of Object.keys(partNumberPositions)) {
+                for (const x of partNumberPositions[y]) {
+                    gearRatio *= getPartNumber(grid[y], x);
+                }
+            }
+            total += gearRatio;
+        }
+    }
+    console.log(`the sum of the gear ratios is ${total}`);
 }
 
 async function main() {
