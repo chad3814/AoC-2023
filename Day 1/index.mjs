@@ -1,29 +1,5 @@
 import fs from 'fs/promises';
 
-const ONE_DIGIT = /(\d|zero|one|two|three|four|five|six|seven|eight|nine)/g;
-const VALUE_MAP = {
-    '0': 0,
-    '1': 1,
-    '2': 2,
-    '3': 3,
-    '4': 4,
-    '5': 5,
-    '6': 6,
-    '7': 7,
-    '8': 8,
-    '9': 9,
-    'zero': 0,
-    'one': 1,
-    'two': 2,
-    'three': 3,
-    'four': 4,
-    'five': 5,
-    'six': 6,
-    'seven': 7,
-    'eight': 8,
-    'nine': 9
-};
-
 async function parse() {
     const input = await fs.readFile('./input.txt', 'utf-8');
     const lines = input.split('\n');
@@ -41,13 +17,42 @@ function part1(lines) {
     console.log(`sum of calibration values: ${total}`);
 }
 
+const ZERO_CODE = '0'.charCodeAt(0);
+const NINE_CODE = '9'.charCodeAt(0);
+const DIGITS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
+function getValue(str) {
+    if (str.charCodeAt(0) >= ZERO_CODE && str.charCodeAt(0) <= NINE_CODE) {
+        return str.charCodeAt(0) - ZERO_CODE;
+    }
+    for (let i = 0; i < 10; i++) {
+        const word = DIGITS[i];
+        if (str.substr(0, word.length) === word) return i;
+    }
+    return null;
+}
+
+function getFirst(line) {
+    for (let i = 0; i < line.length; i++) {
+        const value = getValue(line.substr(i));
+        if (value !== null) return value;
+    }
+    throw new Error('no digits on ' + line);
+}
+
+function getLast(line) {
+    for (let i = line.length - 1; i >= 0; i--) {
+        const value = getValue(line.substr(i));
+        if (value !== null) return value;
+    }
+    throw new Error('no digits on ' + line);
+}
+
 function part2(lines) {
     let total = 0;
     for (const line of lines) {
-        const matches = line.match(ONE_DIGIT);
-        const first = VALUE_MAP[matches[0]];
-        const last = VALUE_MAP[matches[matches.length - 1]];
-        total += (10 * first) + last;
+        const first = getFirst(line);
+        const last = getLast(line);
+        total += first * 10 + last;
     }
     console.log(`sum of calibration values: ${total}`);
 }
