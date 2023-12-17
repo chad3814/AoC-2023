@@ -2,7 +2,7 @@ import fs from 'fs/promises';
 
 async function parse() {
     const input = await fs.readFile('./input.txt', 'utf-8');
-    const lines = input.split('\n').filter(l => l.length > 0);
+    const lines = input.split('\n');
 }
 
 function part1(data) {
