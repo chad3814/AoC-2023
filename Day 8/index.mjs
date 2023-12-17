@@ -41,6 +41,15 @@ function allAtZ(locations) {
     return true;
 }
 
+function gcd(a, b) {
+    if (b === 0) return a;
+    return gcd(b, a % b);
+}
+
+function lcm(a, b) {
+    return (a * b) / gcd(a, b);
+}
+
 function part2(data) {
     const {instructions, locations} = data;
     // const instructions = ['L', 'R'];
@@ -56,19 +65,25 @@ function part2(data) {
     // };
     let steps = 0;
     const currentLocations = Object.keys(locations).filter(location => location.charAt(2) === 'A');
-    let direction;
-    let location;
-    while (!allAtZ(currentLocations)) {
-        direction = instructions[steps % instructions.length];
-        steps++;
-        for (let i = 0; i < currentLocations.length; i++) {
-            location = currentLocations[i];
-            currentLocations[i] = direction === 'L' ?
+    console.log(`thread starts: ${currentLocations.join(', ')}`);
+    console.log(`instruction length: ${instructions.length}`);
+    const counts = [];
+    for (const currentLocation of currentLocations) {
+        steps = 0;
+        let location = currentLocation;
+        console.log(`start at ${location}`);
+        while(!location.endsWith('Z')) {
+            console.log(location);
+            location = instructions[steps % instructions.length] === 'L' ?
                 locations[location].left :
                 locations[location].right;
+            steps++;
         }
+        counts.push(steps);
     }
-    console.log(`it took ${steps} steps`);
+    console.log(counts.join(', '));
+    const multi = counts.reduce(lcm);
+    console.log(`naive lcm is ${multi}`)
 }
 
 async function main() {
