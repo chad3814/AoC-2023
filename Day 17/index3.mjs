@@ -6,7 +6,7 @@ import fs from 'fs/promises';
 async function parse() {
     const input = await fs.readFile('./input.txt', 'utf-8');
     // const input = '11599\n99199\n99199\n99199\n99111'
-    const lines = input.split('\n');
+    const lines = input.split('\n').filter(l => l.length > 0);
     const data = lines.map(l => l.split('').map(i => parseInt(i, 10)));
     return data;
 }
@@ -56,9 +56,9 @@ function part1(map) {
     const pq = new PQueue;
     const start = {x: 0, y: 0, direction: null, run: 0};
     const end = {x: map[0].length - 1, y: map.length - 1, direction: null, run: 0};
-    console.log(`end: ${JSON.stringify(end)}`);
     pq.update(start, 0);
     const visited = new Set;
+
     while (pq.size > 0) {
         const [node, value] = pq.next();
         console.log(`node: ${JSON.stringify(node)} value: ${value} visited: ${visited.size}`);
