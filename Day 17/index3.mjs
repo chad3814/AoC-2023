@@ -56,6 +56,7 @@ function part1(map) {
     const pq = new PQueue;
     const start = {x: 0, y: 0, direction: null, run: 0};
     const end = {x: map[0].length - 1, y: map.length - 1, direction: null, run: 0};
+    console.log(`end: ${JSON.stringify(end)}`);
     pq.update(start, 0);
     const visited = new Set;
     while (pq.size > 0) {

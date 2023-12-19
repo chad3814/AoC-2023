@@ -22,7 +22,8 @@ async function parse() {
     const plan = [];
     for (const line of lines) {
         const [direction, length, color] = line.split(' ');
-        plan.push({direction, length: parseInt(length, 10), color});
+        const hex = color.substr(2, 6);
+        plan.push({direction, length: parseInt(length, 10), color: hex});
     }
     return plan;
 }
@@ -42,7 +43,7 @@ function updatePoints(points, delta) {
 }
 
 function part1(plan) {
-    let pit = [['#']];
+    // let pit = [['#']];
     let x = 0;
     let y = 0;
     let width = 1;
@@ -54,51 +55,51 @@ function part1(plan) {
             case 'U':
                 for (let i = 0; i < length; i++) {
                     if (y === 0) {
-                        const row = new Array(width).fill('.');
-                        pit.unshift(row);
+                        // const row = new Array(width).fill('.');
+                        // pit.unshift(row);
                         y++;
                         height++;
                         updatePoints(points, Directions.SOUTH);
                     }
                     y--;
-                    pit[y][x] = '#';
+                    // pit[y][x] = '#';
                 }
                 break;
             case 'D':
                 for (let i = 0; i < length; i++) {
                     if (y === height - 1) {
-                        const row = new Array(width).fill('.');
-                        pit.push(row);
+                        // const row = new Array(width).fill('.');
+                        // pit.push(row);
                         height++;
                     }
                     y++;
-                    pit[y][x] = '#';
+                    // pit[y][x] = '#';
                 }
                 break;
             case 'L':
                 for (let i = 0; i < length; i++) {
                     if (x === 0) {
-                        for (let j = 0; j < height; j++) {
-                            pit[j].unshift('.');
-                        }
+                        // for (let j = 0; j < height; j++) {
+                        //     pit[j].unshift('.');
+                        // }
                         x++;
                         width++;
-                        updatePoints(points, Directions.WEST);
+                        updatePoints(points, Directions.EAST);
                     }
                     x--;
-                    pit[y][x] = '#';
+                    // pit[y][x] = '#';
                 }
                 break;
             case 'R':
                 for (let i = 0; i < length; i++) {
                     if (x === width - 1) {
-                        for (let j = 0; j < height; j++) {
-                            pit[j].push('.');
-                            width++;
-                        }
+                        // for (let j = 0; j < height; j++) {
+                        //     pit[j].push('.');
+                        // }
+                        width++;
                     }
                     x++;
-                    pit[y][x] = '#';
+                    // pit[y][x] = '#';
                 }
                 break;
         }
@@ -123,8 +124,25 @@ function part1(plan) {
     console.log(`hole has a total volume of ${internalPoints + distance}`);
 }
 
-function part2(data) {
+function colorToInstruction(hex) {
+    const length = parseInt(hex.substr(0, 5), 16);
+    if (hex[5] === '0')
+        return {direction: 'R', length};
+    if (hex[5] === '1')
+        return {direction: 'D', length};
+    if (hex[5] === '2')
+        return {direction: 'L', length};
+    if (hex[5] === '3')
+        return {direction: 'U', length};
+    throw new Error(`bad hex string ${hex}`);
+}
 
+function part2(data) {
+    const plan = [];
+    for (const {color} of data) {
+        plan.push(colorToInstruction(color));
+    }
+    part1(plan);
 }
 
 async function main() {
