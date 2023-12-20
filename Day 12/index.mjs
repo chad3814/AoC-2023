@@ -7,6 +7,13 @@ async function parse() {
     // const input = '?###???????? 3,2,1';
     // const input = '.# 1';
     // const input = '.?????.??#? 1,2';
+//     const input =
+// `???.### 1,1,3
+// .??..??...?##. 1,1,3
+// ?#?#?#?#?#?#?#? 1,3,1,6
+// ????.#...#... 4,1,1
+// ????.######..#####. 1,6,5
+// ?###???????? 3,2,1`;
     const lines = input.split('\n').filter(l => l.length > 0);
     const rows = [];
     for (const line of lines) {
@@ -55,7 +62,7 @@ function permute(springs, checksum) {
 function part1(rows) {
     const permutations = rows.map(({springs, checksum}) => permute(springs, checksum));
     const total = permutations.reduce((a, b) => a + b);
-    console.log(`The sum of the different correct placements is ${total}`);
+    // console.log(`The sum of the different correct placements is ${total}`);
 }
 
 function unfold(rows) {
@@ -118,7 +125,7 @@ function findLast(map, start, check) {
     for (let i = start; i >= 0; i--) {
         if (fits(map, i, check.size)) {
             check.positions.push(i);
-            return i - check.size - 2;
+            return i - 2;
         }
     }
 }
@@ -131,6 +138,11 @@ function findHighest(map, checksum) {
 function findMiddle(map, check) {
     const start = check.positions[0] + 1;
     const end = check.positions.pop();
+    // console.log(`start: ${start}; end: ${end}`);
+    if (start === end + 1) {
+        // console.log('returned without push');
+        return;
+    }
     for (let i = start; i < end; i++) {
         if (fits(map, i, check.size)) {
             check.positions.push(i);
@@ -156,12 +168,20 @@ function count(map, checksum) {
             if (index === -1) max = map.length - 1;
             for (let np = 0; np < next.positions.length; np++) {
                 const nextPos = next.positions[np];
-                if (nextPos >= min && nextPos <= max) next.counts[np] += check.counts[p];
+                if (nextPos >= min && nextPos <= max)
+                    next.counts[nextPos] += check.counts[position];
             }
         }
+        // console.log(`checksum ${i} counts: ${JSON.stringify(check.counts)}`);
     }
     const last = checksum.pop();
-    return last.counts.reduce((a, b) => a + b);
+    // console.log(JSON.stringify(last, null, 4));
+    let sum = 0;
+    for (const key of Object.keys(last.counts)) {
+        console.log(`${key}: ${last.counts[key]}; sum: ${sum}`);
+        sum += last.counts[key];
+    }
+    return sum;
 }
 function part2(rows) {
     rows = unfold(rows);
@@ -175,7 +195,7 @@ function part2(rows) {
         findLowest(map, checksum);
         findHighest(map, checksum);
         findAllMiddles(map, checksum);
-        console.log(`checksum: ${JSON.stringify(checksum)}`);
+        // console.log(`map: ${map}; checksum: ${JSON.stringify(checksum)}`);
         const first = map.indexOf('#');
         if (first !== -1) {
             const check = checksum[0];
@@ -187,7 +207,7 @@ function part2(rows) {
         const last = map.lastIndexOf('#');
         if (last !== -1) {
             const check = checksum.pop();
-            console.log(`last checksum ${check}`);
+            // console.log(`last checksum ${JSON.stringify(check)}`);
             for (const position of check.positions) {
                 if ((position + check.size) < last) {
                     // can't have the last check end before the last #
@@ -196,11 +216,11 @@ function part2(rows) {
             }
             checksum.push(check);
         }
-        console.log(`check 0 has positions ${checksum[0].positions.join(', ')}`);
-        checksum[0].counts = new Array(checksum[0].positions.length).fill(1);
-        for (let i = 1; i < checksum.length; i++) {
-            console.log(`check ${i} has positions ${checksum[i].positions.join(', ')}`);
-            checksum[i].counts = new Array(checksum[i].positions.length).fill(0);
+        for (const check of checksum) {
+            check.counts = {};
+            for (const position of check.positions) {
+                check.counts[position] = (check === checksum[0] ? 1 : 0);
+            }
         }
         sum += count(map, checksum);
     }
@@ -209,7 +229,7 @@ function part2(rows) {
 
 async function main() {
     const rows = await parse();
-    part1(rows);
+    //part1(rows);
     part2(rows);
 }
 
