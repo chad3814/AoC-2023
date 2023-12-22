@@ -171,74 +171,102 @@ function rangesValue(ranges) {
 
 function dupRange(range) {
     return {
-        x: range.x.slice(),
-        m: range.m.slice(),
-        a: range.a.slice(),
-        s: range.s.slice(),
+        x: range.x?.slice() ?? [1, 4000],
+        m: range.m?.slice() ?? [1, 4000],
+        a: range.a?.slice() ?? [1, 4000],
+        s: range.s?.slice() ?? [1, 4000],
     };
 }
 
 function part2(data) {
     const {workflows} = data;
-    const rangesMap = new Map;
-    rangesMap.set('in', [
-        {
-            x: [1, 4000],
-            m: [1, 4000],
-            a: [1, 4000],
-            s: [1, 4000],
-        }
-    ]);
-    const threads = ['in'];
+    const threads = [{label: 'in', accepted: dupRange({})}];
+    const allAccepted = [];
+    const allRejected = [];
     while (threads.length > 0) {
-        const label = threads.pop();
-        let ranges = rangesMap.get(label);
-        if (!ranges || ranges.some(r => !r)) {
-            throw new Error(`invalid ranges set for label "${label}" ${JSON.stringify(ranges)} ${ranges.length}`);
-        }
+        const {label, accepted} = threads.pop();
+        console.log('label:', label, JSON.stringify(accepted));
         const workflow = workflows[label];
+        console.log('workflow:', JSON.stringify(workflow));
         for (const rule of workflow) {
             if (rule.prop === 'all') {
-                threads.push(rule.dest);
-                const existing = rangesMap.get(rule.dest) ?? [];
-                existing.push(ranges.map(r => dupRange(r)));
-                rangesMap.set(rule.dest, existing);
+                if (rule.dest === 'R') {
+                    allRejected.push(dupRange(accepted));
+                    break;
+                }
+                if (rule.dest === 'A') {
+                    allAccepted.push(dupRange(accepted));
+                    break;
+                }
+                threads.push({label: rule.dest, accepted: dupRange(accepted)});
                 break;
             }
-            const ruleRangeTrue = {
-                x: [1, 4000],
-                m: [1, 4000],
-                a: [1, 4000],
-                s: [1, 4000],
-            };
-            const ruleRangeFalse = {
-                x: [1, 4000],
-                m: [1, 4000],
-                a: [1, 4000],
-                s: [1, 4000],
-            };
-            ruleRangeTrue[rule.prop] = rule.op === '<' ?
-                [1, rule.value -1] :
-                [rule.value + 1, 4000];
-            ruleRangeFalse[rule.prop] = rule.op === '<' ?
-                [rule.value, 4000] :
-                [1, rule.value];
-            console.log(`label: ${label}; dest: ${rule.dest}`);
-            console.log(`ranges: ${JSON.stringify(ranges)}`);
-            console.log(`true range: ${JSON.stringify(ruleRangeTrue)}`);
-            console.log(`false range: ${JSON.stringify(ruleRangeFalse)}`);
-            const newRanges = ranges.map(range => reduceRanges(range, ruleRangeTrue));
-            console.log(`new ranges for true branch: ${JSON.stringify(newRanges)}`);
-            const existing = rangesMap.get(rule.dest) ?? [];
-            existing.push(...newRanges);
-            rangesMap.set(rule.dest, existing);
-            ranges = ranges.map(range => reduceRanges(range, ruleRangeFalse));
-            console.log(`new ranges for false branch: ${JSON.stringify(ranges)}`);
+            const newAccepted = dupRange(accepted);
+            if (rule.op === '<') {
+                if (newAccepted[rule.prop][0] >= rule.value) {
+                    continue;
+                }
+                newAccepted[rule.prop][1] = Math.min(newAccepted[rule.prop][1], rule.value - 1);
+                if (rule.dest === 'R') {
+                    allRejected.push(newAccepted);
+                    break;
+                }
+                if (rule.dest === 'A') {
+                    allAccepted.push(newAccepted);
+                    break;
+                }
+                threads.push({label: rule.dest, accepted: newAccepted});
+                accepted[rule.prop][0] = rule.value;
+            } else {
+                if (newAccepted[rule.prop][1] <= rule.value) {
+                    continue;
+                }
+                newAccepted[rule.prop][0] = Math.max(newAccepted[rule.prop][0], rule.value + 1);
+                if (rule.dest === 'R') {
+                    allRejected.push(newAccepted);
+                    break;
+                }
+                if (rule.dest === 'A') {
+                    allAccepted.push(newAccepted);
+                    break;
+                }
+                threads.push({label: rule.dest, accepted: newAccepted});
+                accepted[rule.prop][1] = rule.value;
+            }
         }
     }
-    const ranges = rangesMap.get('A');
-    const sum = rangesValue(ranges);
-    console.log(`total possible acceptable parts: ${sum}`);
+    console.log(`all accepted: ${JSON.stringify(allAccepted, null, 4)}`);
+    console.log(`all rejected: ${JSON.stringify(allRejected, null, 4)}`);
+    const flatten = allAccepted.reduce(
+        (flat, range) => {
+            return {
+                x: [
+                    Math.max(flat.x[0], range.x[0]),
+                    Math.min(flat.x[1], range.x[1])
+                ],
+                m: [
+                    Math.max(flat.m[0], range.m[0]),
+                    Math.min(flat.m[1], range.m[1])
+                ],
+                a: [
+                    Math.max(flat.a[0], range.a[0]),
+                    Math.min(flat.a[1], range.a[1])
+                ],
+                s: [
+                    Math.max(flat.s[0], range.s[0]),
+                    Math.min(flat.s[1], range.s[1])
+                ]
+            }
+        }
+    );
+    console.log(`flattened: ${JSON.stringify(flatten, null, 4)}`)
+    const sum = 
+        (flatten.x[1] - flatten.x[0] + 1) *
+        (flatten.m[1] - flatten.m[0] + 1) *
+        (flatten.a[1] - flatten.a[0] + 1) *
+        (flatten.s[1] - flatten.s[0] + 1);
+
+    console.log(`sum is ${sum}`);
 }
 
 async function main() {
